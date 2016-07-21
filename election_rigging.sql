@@ -1,94 +1,77 @@
 -- create 3 regions
-  -- Bernie Heavy Region
+  -- Democratic Heavy Region
     CREATE TABLE Region_1 (voter_id INT PRIMARY KEY, name character(25), vote char(1));
   -- Neutral Region
     CREATE TABLE Region_2 (voter_id int PRIMARY KEY, name character(25), vote char(1));
-  -- Hillary Heavy Region
+  -- Republican Heavy Region
     CREATE TABLE Region_3 (voter_id int PRIMARY KEY, name character(25), vote char(1));
 
 
---
-INSERT INTO Region_1 (voter_id, name, vote)
-VALUES (1, "Berner 1", 'B'), (2, "Berner 2", 'B'), (3, "Tumbler Fem 1", 'H');
+-- Populate regions with voters. Real data shows a tie vote
+  INSERT INTO Region_1 (voter_id, name, vote)
+  VALUES (1, "Dem 1", 'D'), (2, "Dem 2", 'D'), (3, "Rep 1", 'R');
 
 
-INSERT INTO Region_2 (voter_id, name, vote)
-VALUES (1, "Berner 3", 'B'), (2, "Tumbler Fem 2", 'H');
+  INSERT INTO Region_2 (voter_id, name, vote)
+  VALUES (1, "Dem 3", 'D'), (2, "Rep 2", 'R');
 
---
-INSERT INTO Region_3 (voter_id, name, vote)
-VALUES (1, "Berner 4", 'B'), (2, "Tumbler Fem 3", 'H'), (3, "Tumbler Fem 4", 'H');
+  --
+  INSERT INTO Region_3 (voter_id, name, vote)
+  VALUES (1, "Dem 4", 'D'), (2, "Rep 3", 'R'), (3, "Rep 4", 'R');
 
 
 
 -- CREATE VIEW Region_1_tally AS
--- SELECT COUNT((SELECT vote FROM Region_1 WHERE vote='B')) AS Bernie, COUNT((SELECT vote FROM Region_1 WHERE vote='H')) AS Hillary
+-- SELECT COUNT((SELECT vote FROM Region_1 WHERE vote='D')) AS Democratic, COUNT((SELECT vote FROM Region_1 WHERE vote='R')) AS Republican
 -- FROM Region_1
 
 CREATE VIEW [Region 1 Total] AS
 SELECT 'Votes' AS 'Votes',
-   ( SELECT SUM(vote) FROM Region_1 WHERE vote='B' ) AS Bernie,
-   ( SELECT SUM(vote) FROM Region_1 WHERE vote='H' ) AS Hillary;
-
+   ( SELECT COUNT(vote) FROM Region_1 WHERE vote='D' ) AS Democratic,
+   ( SELECT COUNT(vote) FROM Region_1 WHERE vote='R' ) AS Republican;
 
 CREATE VIEW [Region 2 Total] AS
-SELECT COUNT((SELECT vote FROM Region_2 WHERE vote='B')) AS Bernie, COUNT((SELECT vote FROM Region_2 WHERE vote='H')) AS Hillary
-FROM Region_2
+SELECT 'Votes' AS 'Votes',
+   ( SELECT COUNT(vote) FROM Region_2 WHERE vote='D' ) AS Democratic,
+   ( SELECT COUNT(vote) FROM Region_2 WHERE vote='R' ) AS Republican;
+
 
 CREATE VIEW [Region 3 Total] AS
-SELECT COUNT((SELECT vote FROM Region_3 WHERE vote='B')) AS Bernie, COUNT((SELECT vote FROM Region_3 WHERE vote='H')) AS Hillary
-FROM Region_3
-
-
--- Bernie Break Down
-CREATE VIEW [Bernie Vote Total] AS
-SELECT 'Region 1' AS Region, COUNT(vote) AS [Bernie Vote Total]
-FROM Region_1
-WHERE  vote='B'
-UNION ALL
-SELECT 'Region 2', COUNT(vote)
-FROM Region_2
-WHERE vote='B'
-UNION ALL
-SELECT 'Region 3', COUNT(vote)
-FROM Region_3
-WHERE vote='B'
-
--- Hillary Break Down
-CREATE VIEW [Hillary Vote Total] AS
-SELECT 'Region 1' AS Region, COUNT(vote) AS [Hillary Vote Total]
-FROM Region_1
-WHERE  vote='H'
-UNION ALL
-SELECT 'Region 2', COUNT(vote)
-FROM Region_2
-WHERE vote='H'
-UNION ALL
-SELECT 'Region 3', COUNT(vote)
-FROM Region_3
-WHERE vote='H'
-
-
-CREATE VIEW [Primary Results] AS
 SELECT 'Votes' AS 'Votes',
-   ( ( SELECT SUM([Bernie Vote Total]) FROM [Bernie Vote Total] ) ) AS [Bernie],
-   ( ( SELECT SUM([Hillary Vote Total]) FROM [Hillary Vote Total] ) ) AS [Hillary];
+   ( SELECT COUNT(vote) FROM Region_3 WHERE vote='D' ) AS Democratic,
+   ( SELECT COUNT(vote) FROM Region_3 WHERE vote='R' ) AS Republican;
 
 
+-- Democratic Break Down
+CREATE VIEW [Democratic Vote Total] AS
+SELECT 'Region 1' AS Region, COUNT(vote) AS [Democratic Vote Total]
+FROM Region_1
+WHERE  vote='D'
+UNION ALL
+SELECT 'Region 2', COUNT(vote)
+FROM Region_2
+WHERE vote='D'
+UNION ALL
+SELECT 'Region 3', COUNT(vote)
+FROM Region_3
+WHERE vote='D'
+
+-- Republican Break Down
+CREATE VIEW [Republican Vote Total] AS
+SELECT 'Region 1' AS Region, COUNT(vote) AS [Republican Vote Total]
+FROM Region_1
+WHERE  vote='R'
+UNION ALL
+SELECT 'Region 2', COUNT(vote)
+FROM Region_2
+WHERE vote='R'
+UNION ALL
+SELECT 'Region 3', COUNT(vote)
+FROM Region_3
+WHERE vote='R'
 
 
-
-
-
-
-
-
-
---  Somehow tripling answer
-SELECT 'Voting' AS 'votes', SUM(b.[Bernie Vote Total]) AS [Bernie], SUM(h.[Hillary Vote Total]) AS [Hillary]
-FROM [Bernie Vote Total] AS b, [Hillary Vote Total] as h;
-
-SELECT SUM(b.[Bernie Vote Total]) AS [Bernie]
-FROM [Bernie Vote Total] AS b;
-SELECT SUM(h.[Hillary Vote Total]) AS [Hillary]
-FROM [Hillary Vote Total] as h;
+CREATE VIEW [Election Results] AS
+SELECT 'Votes' AS 'Votes',
+   ( ( SELECT SUM([Democratic Vote Total]) FROM [Democratic Vote Total] ) ) AS [Democratic],
+   ( ( SELECT SUM([Republican Vote Total]) FROM [Republican Vote Total] ) ) AS [Republican];
