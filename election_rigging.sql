@@ -43,8 +43,8 @@
 
 
 -- Democratic votes by region
-  CREATE VIEW `Democratic Vote Total` AS
-  SELECT 'Region 1' AS Region, COUNT(vote) AS `Democratic Vote Total`
+  CREATE VIEW `Vote Total: Democrats` AS
+  SELECT 'Region 1' AS Region, COUNT(vote) AS `Vote Total: Democrats`
   FROM `Region 1`
   WHERE  vote='D'
   UNION ALL
@@ -58,7 +58,7 @@
 
 -- Democratic votes by region after voter suppression tactics
   CREATE VIEW `Democratic Vote Suppression Total` AS
-  SELECT 'Region 1' AS Region, COUNT(vote) AS `Democratic Vote Total`
+  SELECT 'Region 1' AS Region, COUNT(vote) AS `Vote Total: Democrats`
   FROM `Region 1`
   WHERE  vote='D'
   AND   member_since < '2016-1-1'
@@ -74,8 +74,8 @@
   AND   member_since < '2016-1-1';
 
 -- Republican votes by region
-  CREATE VIEW `Republican Vote Total` AS
-  SELECT 'Region 1' AS Region, COUNT(vote) AS `Republican Vote Total`
+  CREATE VIEW `Vote Total: Republicans` AS
+  SELECT 'Region 1' AS Region, COUNT(vote) AS `Vote Total: Republicans`
   FROM `Region 1`
   WHERE  vote='R'
   UNION ALL
@@ -92,20 +92,20 @@
 -- Legit election results
   CREATE VIEW `Election Results` AS
   SELECT 'Votes' AS 'Votes',
-     ( SELECT SUM(`Democratic Vote Total`) FROM `Democratic Vote Total` ) AS Democratic,
-     ( SELECT SUM(`Republican Vote Total`) FROM `Republican Vote Total` ) AS Republican;
+     ( SELECT SUM(`Vote Total: Democrats`) FROM `Vote Total: Democrats` ) AS Democratic,
+     ( SELECT SUM(`Vote Total: Republicans`) FROM `Vote Total: Republicans` ) AS Republican;
 
 -- Democratic votes don't count if they have joined the party too recently... >__>
   CREATE VIEW `Election Results: Skewed For Republicans` AS
   SELECT 'Votes' AS 'Votes',
-    ( SELECT SUM(`Democratic Vote Total`) FROM `Democratic Vote Suppression Total` ) AS Democratic,
-    ( SELECT SUM(`Republican Vote Total`) FROM `Republican Vote Total` ) AS Republican;
+    ( SELECT SUM(`Vote Total: Democrats`) FROM `Democratic Vote Suppression Total` ) AS Democratic,
+    ( SELECT SUM(`Vote Total: Republicans`) FROM `Vote Total: Republicans` ) AS Republican;
 
 -- Dems total is set to 48.5% of the total ballots cast and Reps get 51.5% to pretend the race was close
   CREATE VIEW `Election Results: Skewed For Democrats` AS
   SELECT 'Votes' AS 'Votes',
-     ( SELECT ROUND( (SUM(`Democratic Vote Total`) + SUM(`Democratic Vote Total`)) * 0.515, 0) + 1 FROM `Democratic Vote Total` ) AS Democratic,
-     ( SELECT ROUND( (SUM(`Republican Vote Total`) + SUM(`Republican Vote Total`)) * 0.485, 0) - 1 FROM `Republican Vote Total` ) AS Republican;
+     ( SELECT ROUND( (SUM(`Vote Total: Democrats`) + SUM(`Vote Total: Democrats`)) * 0.515, 0) + 1 FROM `Vote Total: Democrats` ) AS Democratic,
+     ( SELECT ROUND( (SUM(`Vote Total: Republicans`) + SUM(`Vote Total: Republicans`)) * 0.485, 0) - 1 FROM `Vote Total: Republicans` ) AS Republican;
 
 
 
@@ -127,9 +127,9 @@
   DROP VIEW `Region 2 Total`;
   DROP VIEW `Region 3 Total`;
 
-  DROP VIEW `Democratic Vote Total`;
+  DROP VIEW `Vote Total: Democrats`;
   DROP VIEW `Democratic Vote Suppression Total`;
-  DROP VIEW `Republican Vote Total`;
+  DROP VIEW `Vote Total: Republicans`;
 
   DROP VIEW `Election Results`;
   DROP VIEW `Election Results: Skewed For Republicans`;
