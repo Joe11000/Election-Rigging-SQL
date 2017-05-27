@@ -1,3 +1,5 @@
+-- STEP 1 -> 5       Copy paste for a valid Election
+-- STEP 6(Optional)  Additional steps to Rig Election
 
 
 -- STEP 1: Create 3 regions
@@ -42,86 +44,90 @@
      ( SELECT COUNT(vote) FROM `Region 3` WHERE vote='R' ) AS Republican;
 
 
--- STEP 4: view all
--- Democrats votes by region
-  CREATE VIEW `Vote Total: Democrats` AS
-  SELECT 'Region 1' AS Region, COUNT(vote) AS votes
-  FROM `Region 1`
-  WHERE  vote='D'
-  UNION ALL
-  SELECT 'Region 2', COUNT(vote)
-  FROM `Region 2`
-  WHERE vote='D'
-  UNION ALL
-  SELECT 'Region 3', COUNT(vote)
-  FROM `Region 3`
-  WHERE vote='D';
+-- STEP 4: create views to view all votes for each party per region each region
+  -- Democrats votes by region
+    CREATE VIEW `Regional Results: Democrats` AS
+    SELECT 'Region 1' AS Region, COUNT(vote) AS votes
+    FROM `Region 1`
+    WHERE  vote='D'
+    UNION ALL
+    SELECT 'Region 2', COUNT(vote)
+    FROM `Region 2`
+    WHERE vote='D'
+    UNION ALL
+    SELECT 'Region 3', COUNT(vote)
+    FROM `Region 3`
+    WHERE vote='D';
 
--- Democrats votes by region after voter suppression tactics
-  CREATE VIEW `Democrats Vote Suppression Total` AS
-  SELECT 'Region 1' AS Region, COUNT(vote) AS votes
-  FROM `Region 1`
-  WHERE  vote='D'
-  AND   member_since < '2016-1-1'
-  UNION ALL
-  SELECT 'Region 2', COUNT(vote)
-  FROM `Region 2`
-  WHERE vote='D'
-  AND   member_since < '2016-1-1'
-  UNION ALL
-  SELECT 'Region 3', COUNT(vote)
-  FROM `Region 3`
-  WHERE vote='D'
-  AND   member_since < '2016-1-1';
-
--- Republican votes by region
-  CREATE VIEW `Vote Total: Republicans` AS
-  SELECT 'Region 1' AS Region, COUNT(vote) AS votes
-  FROM `Region 1`
-  WHERE  vote='R'
-  UNION ALL
-  SELECT 'Region 2', COUNT(vote)
-  FROM `Region 2`
-  WHERE vote='R'
-  UNION ALL
-  SELECT 'Region 3', COUNT(vote)
-  FROM `Region 3`
-  WHERE vote='R';
+  -- Republican votes by region
+    CREATE VIEW `Regional Results: Republicans` AS
+    SELECT 'Region 1' AS Region, COUNT(vote) AS votes
+    FROM `Region 1`
+    WHERE  vote='R'
+    UNION ALL
+    SELECT 'Region 2', COUNT(vote)
+    FROM `Region 2`
+    WHERE vote='R'
+    UNION ALL
+    SELECT 'Region 3', COUNT(vote)
+    FROM `Region 3`
+    WHERE vote='R';
 
 
-
--- Legit election results
+-- Step 5: Create View for Legit election results
   CREATE VIEW `Election Results` AS
   SELECT '' AS 'Votes',
-     ( SELECT SUM(votes) FROM `Vote Total: Democrats` ) AS Democrats,
-     ( SELECT SUM(votes) FROM `Vote Total: Republicans` ) AS Republican;
-
--- Democrats votes don't count if they have joined the party too recently... >__>
-  CREATE VIEW `Election Results: Skewed For Republicans` AS
-  SELECT '' AS 'Votes',
-    ( SELECT SUM(votes) FROM `Democrats Vote Suppression Total` ) AS Democrats,
-    ( SELECT SUM(votes) FROM `Vote Total: Republicans` ) AS Republican;
+     ( SELECT SUM(votes) FROM `Regional Results: Democrats` ) AS Democrats,
+     ( SELECT SUM(votes) FROM `Regional Results: Republicans` ) AS Republican;
 
 
--- Dems total is set to 49% of the total ballots cast and Reps get 51% to pretend the race was close
-  CREATE VIEW `Election Results: Skewed For Democrats` AS
-  SELECT '' AS 'Votes',
+-- OPTIONAL!!!! Rig the election
+-- Step 6:
 
-  ( SELECT ROUND(COUNT(votes) * 0.515, 0) + 1 FROM
-    (
-      SELECT votes  FROM `Vote Total: Democrats`
+  -- Option 1: Cheat For Republicans
+    -- Create a new view to hold new regional result after voter suppression tactic
+      CREATE VIEW `Regional Results: Skewed for Republicans` AS
+      SELECT 'Region 1' AS Region, COUNT(vote) AS votes
+      FROM `Region 1`
+      WHERE  vote='D'
+      AND   member_since < '2016-1-1'
       UNION ALL
-      SELECT votes FROM `Vote Total: Republicans`
-    ) as derived_classes_must_have_names
-  ) as Democrats,
-
-  ( SELECT ROUND(COUNT(votes) * (1 - 0.515), 0) - 1 FROM
-    (
-      SELECT votes  FROM `Vote Total: Democrats`
+      SELECT 'Region 2', COUNT(vote)
+      FROM `Region 2`
+      WHERE vote='D'
+      AND   member_since < '2016-1-1'
       UNION ALL
-      SELECT votes FROM `Vote Total: Republicans`
-    ) as derived_classes_must_have_names
-  ) as Republicans
+      SELECT 'Region 3', COUNT(vote)
+      FROM `Region 3`
+      WHERE vote='D'
+      AND   member_since < '2016-1-1';
+
+    -- Democrats votes don't count if they have joined/switched the party too recently... >__>
+      CREATE VIEW `Election Results: Skewed For Republicans` AS
+      SELECT '' AS 'Votes',
+        ( SELECT SUM(votes) FROM `Regional Results: Skewed for Republicans` ) AS Democrats,
+        ( SELECT SUM(votes) FROM `Regional Results: Republicans` ) AS Republican;
+
+
+  -- Option 2: Cheat For Democrats
+    -- Make Dems win by 1 vote no matter what
+    CREATE VIEW `Election Results: Skewed For Democrats` AS
+    SELECT '' AS 'Votes',
+      ( SELECT FLOOR( (COUNT(votes) / 2) + 0.5 ) FROM
+        (
+          SELECT votes  FROM `Regional Results: Democrats`
+          UNION ALL
+          SELECT votes FROM `Regional Results: Republicans`
+        ) as derived_classes_must_have_names
+      ) as Democrats,
+
+      ( SELECT CEILING( (COUNT(votes) / 2) - 0.5 )  FROM
+        (
+          SELECT votes  FROM `Regional Results: Democrats`
+          UNION ALL
+          SELECT votes FROM `Regional Results: Republicans`
+        ) as derived_classes_must_have_names
+      ) as Republicans;
 
 
 
@@ -143,9 +149,9 @@
   DROP VIEW `Region 2 Total`;
   DROP VIEW `Region 3 Total`;
 
-  DROP VIEW `Vote Total: Democrats`;
-  DROP VIEW `Democrats Vote Suppression Total`;
-  DROP VIEW `Vote Total: Republicans`;
+  DROP VIEW `Regional Results: Democrats`;
+  DROP VIEW `Regional Results: Skewed for Republicans`;
+  DROP VIEW `Regional Results: Republicans`;
 
   DROP VIEW `Election Results`;
   DROP VIEW `Election Results: Skewed For Republicans`;
